@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const incomeCertificate = require('./incomeCertificate');
+const authRoute = require('./auth');
 
 
-router.use('/incomeCertificate', incomeCertificate)
+router.use('/auth', authRoute)
 
 module.exports = router

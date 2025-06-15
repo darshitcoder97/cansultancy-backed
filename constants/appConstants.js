@@ -78,3 +78,12 @@ exports.SMTPSupportConfig = {
 exports.REPORT_PATH = {
   EXCEL_REPORT: '/reports/excel/',
 };
+
+
+exports.SMTPConfig = {
+  EMAIL: 'darshitcoder97@gmail.com',
+  PASSWORD: 'yqed gzal bjuj mjgc',
+  HOST: 'smtp.gmail.com',
+  PORT: 587,
+  FROM_EMAIL: 'darshitcoder97@gmail.com',
+};

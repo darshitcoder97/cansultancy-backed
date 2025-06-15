@@ -16,6 +16,10 @@ const userSchema = mongoose.Schema({
     ProfileImage: {
         type: String,
         required: false,
+    },
+    Otp: {
+        type: String,
+        required: false,
     }
 },
 {

@@ -3,6 +3,8 @@ const user = require('../models/user')
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { MESSAGES } = require('../constants/appConstants');
+const { generateOTP } = require('../lib/utils/utils');
+const mailer = require('../lib/mailer')
 
 module.exports = {
     auth: async (req, res, next) => {
@@ -52,6 +54,47 @@ module.exports = {
                 userID: userObj._id,
                 error: false,
                 message: MESSAGES.USER_LOGIN_SUCCESSFULLY,
+            });
+        } catch (error) {
+            console.log('Error : ', error);
+            return next(Boom.notAcceptable(MESSAGES.SOMETHING_WENT_WRONG, error));
+        }
+    },
+    forgetPasswordEmail: async (req, res, next) => {
+        try {
+            const { Email } = req.body;
+            const userObj = await user.findOne({ Email: Email });
+            if (!userObj) {
+                return next(Boom.badRequest(MESSAGES.RECORD_NOT_FOUND));
+            }
+            const otp = generateOTP();
+            await user.updateOne({ Email }, { $set: { Otp: otp } });
+            await mailer.forgetPasswordEmail(userObj.Email, userObj, otp);
+            return res.status(202).json({
+                error: false,
+                message: MESSAGES.PASSWORD_RESET_SENT,
+                UserID: userObj._id,
+            });
+        } catch (error) {
+            console.log('Error : ', error);
+            return next(Boom.notAcceptable(MESSAGES.SOMETHING_WENT_WRONG, error));
+        }
+    },
+    resetPassword: async (req, res, next) => {
+        try {
+            const { UserID, Password, Otp } = req.body; 
+            const userObj = await user.findById(UserID);
+            if (Otp != userObj.Otp) return next(Boom.badRequest(MESSAGES.INVALID_OTP));
+            const newPassword = await bcrypt.hash(Password, 10);
+            const updateuser = await user.updateOne({ _id:UserID }, {
+                $set: { Password: newPassword, Otp: null }
+            });
+            if (!updateuser) {
+                return next(Boom.badRequest(MESSAGES.FAILED_TO_UPDATE));
+            }
+            return res.status(202).json({
+                error: false,
+                message: MESSAGES.PASSWORD_RESET_SUCCESS,
             });
         } catch (error) {
             console.log('Error : ', error);
